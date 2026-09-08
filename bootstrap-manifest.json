@@ -1,0 +1,39 @@
+{
+  "schema": "scout-brainstem-bootstrap/1",
+  "version": "1.0.0",
+  "repository": "https://github.com/kody-w/scout-brainstem-bootstrap",
+  "skill": {
+    "name": "scout-brainstem-bootstrap",
+    "raw_url": "https://raw.githubusercontent.com/kody-w/scout-brainstem-bootstrap/main/SKILL.md",
+    "global_relative_path": ".scout/m-skills/scout-brainstem-bootstrap/SKILL.md"
+  },
+  "brainstem": {
+    "health_url": "http://127.0.0.1:7071/health",
+    "chat_url": "http://127.0.0.1:7071/chat",
+    "ui_url": "http://127.0.0.1:7071",
+    "installer_repository": "https://github.com/kody-w/rapp-installer",
+    "installer_commit": "49db80c8c6b6caa7647369beaf477d374a8f293c",
+    "installers": {
+      "windows": {
+        "url": "https://raw.githubusercontent.com/kody-w/rapp-installer/49db80c8c6b6caa7647369beaf477d374a8f293c/install.ps1",
+        "sha256": "747a5a8b2e6a41292a4b8b1a719fea588bdd21c523e3a3edb474dd651a8a2fda"
+      },
+      "unix": {
+        "url": "https://raw.githubusercontent.com/kody-w/rapp-installer/49db80c8c6b6caa7647369beaf477d374a8f293c/install.sh",
+        "sha256": "cc586dd1752520d05fbff99a637eef308bb7051ffae457b7d037aa0574341794"
+      }
+    }
+  },
+  "acceptance": {
+    "health_status": "ok",
+    "required_chat_fields": [
+      "response",
+      "session_id"
+    ],
+    "leave_ui_open": true,
+    "grail_files_immutable": [
+      "rapp_brainstem/brainstem.py",
+      "rapp_brainstem/index.html"
+    ]
+  }
+}
