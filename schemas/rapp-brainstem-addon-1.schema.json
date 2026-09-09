@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/kody-w/scout-brainstem-bootstrap/main/schemas/rapp-brainstem-addon-1.schema.json",
+  "title": "RAPP Brainstem Add-on Profile 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "name",
+    "display_name",
+    "version",
+    "description",
+    "identity",
+    "protocol",
+    "wire",
+    "source",
+    "compatibility",
+    "install",
+    "payload",
+    "collaboration",
+    "runtime",
+    "acceptance",
+    "uninstall"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "schema": {
+      "const": "rapp-brainstem-addon/1"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^@[a-z0-9-]+/[a-z0-9-]+$"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "rappid",
+        "mint"
+      ],
+      "properties": {
+        "rappid": {
+          "type": "string",
+          "pattern": "^rappid:@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?:[0-9a-f]{64}$"
+        },
+        "mint": {
+          "type": "object"
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "required": [
+        "spec",
+        "authority",
+        "commit",
+        "revision_frame_hash",
+        "normative_sha256"
+      ],
+      "properties": {
+        "spec": {
+          "const": "rapp/1"
+        },
+        "authority": {
+          "const": "https://github.com/kody-w/rapp-1"
+        },
+        "commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "revision_frame_hash": {
+          "$ref": "#/$defs/sha256"
+        },
+        "normative_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "wire": {
+      "type": "object",
+      "required": [
+        "transport",
+        "new_endpoints",
+        "new_envelopes"
+      ],
+      "properties": {
+        "transport": {
+          "const": "POST /chat"
+        },
+        "new_endpoints": {
+          "const": false
+        },
+        "new_envelopes": {
+          "const": false
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "repository",
+        "commit",
+        "sparse_path"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "sparse_path": {
+          "type": "string",
+          "pattern": "^[^\\\\/:]+$"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object"
+    },
+    "install": {
+      "type": "object",
+      "required": [
+        "root",
+        "skill",
+        "entrypoint"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^[^\\\\/:]+(?:/[^\\\\/:]+)*$"
+        },
+        "skill": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "entrypoint": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "preview": {
+          "type": "string"
+        },
+        "generated_config": {
+          "$ref": "#/$defs/relativePath"
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "root",
+        "files"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      }
+    },
+    "collaboration": {
+      "type": "object"
+    },
+    "runtime": {
+      "type": "object"
+    },
+    "acceptance": {
+      "type": "object"
+    },
+    "uninstall": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^:]+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relativePath"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}

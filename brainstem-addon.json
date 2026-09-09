@@ -1,0 +1,149 @@
+{
+  "$schema": "https://raw.githubusercontent.com/kody-w/scout-brainstem-bootstrap/main/schemas/rapp-brainstem-addon-1.schema.json",
+  "schema": "rapp-brainstem-addon/1",
+  "name": "@rapp/scout-native",
+  "display_name": "Scout Native",
+  "version": "1.0.0",
+  "description": "Makes a local RAPP Brainstem native to Microsoft Scout by keeping the real static index.html connected in Scout's middle workspace pane.",
+  "identity": {
+    "rappid": "rappid:@kody-w/scout-native:8016d0043ee7dda2c11aef3cff27398fa2c6278d550999cff33d4cf778a75abf",
+    "mint": {
+      "method": "keyless-uuidv4",
+      "uuid": "26106a3b-2121-47ac-8124-80644b9a5dad"
+    }
+  },
+  "protocol": {
+    "spec": "rapp/1",
+    "authority": "https://github.com/kody-w/rapp-1",
+    "commit": "58058d08c9f0e340fae07c9865647f599c32634d",
+    "revision": "rev-15",
+    "revision_frame_hash": "83ca275f35cca96e43d75c99d338326c1a39b2240eabf57eb7c29ac96cc90818",
+    "normative_sha256": "348e7d5baa94aaf2ce4c5354f3cb261f389298a04af65e271a686d3b62f7c384"
+  },
+  "wire": {
+    "transport": "POST /chat",
+    "new_endpoints": false,
+    "new_envelopes": false
+  },
+  "source": {
+    "repository": "https://github.com/microsoft/aibast-agents-library.git",
+    "ref": "refs/pull/201/head",
+    "commit": "8a430919d269febd6cd67570059842c446fc6252",
+    "sparse_path": "rapp_brainstem",
+    "version": "0.6.17"
+  },
+  "compatibility": {
+    "platforms": [
+      "windows"
+    ],
+    "grail": {
+      "id": "grail:a8f1cff11f7f4f005047ef8038150102b40568095663681d945a637757a3eb8c",
+      "repository": "https://github.com/microsoft/aibast-agents-library.git",
+      "commit": "8a430919d269febd6cd67570059842c446fc6252",
+      "path": "rapp_brainstem/brainstem.py",
+      "raw_sha256": "02d95fbcb42edcb340b3dc2c61138db3e84868bd37d005519560edf9d068e143",
+      "bytes": 155715
+    },
+    "verified_artifacts": [
+      {
+        "path": "rapp_brainstem/brainstem.py",
+        "bytes": 155715,
+        "sha256": "02d95fbcb42edcb340b3dc2c61138db3e84868bd37d005519560edf9d068e143"
+      },
+      {
+        "path": "rapp_brainstem/index.html",
+        "bytes": 204194,
+        "sha256": "7668a20a34fbe3e230c9e196291de378ab7cec24827866a6e6b16ec46f5599a2"
+      }
+    ]
+  },
+  "install": {
+    "root": "agents/experimental/scout",
+    "skill": "SKILL.md",
+    "entrypoint": "brainstem-workspace.ps1",
+    "preview": "../../../index.html",
+    "generated_config": "preview-config.js"
+  },
+  "payload": {
+    "root": "addon",
+    "files": [
+      {
+        "path": "AGENT-ROSETTA-1.md",
+        "bytes": 3548,
+        "sha256": "8662292a3669be224dedb9175b48aab1daf9a8e9e2eec1f3773956999f973a3c"
+      },
+      {
+        "path": "brainstem-workspace.ps1",
+        "bytes": 12118,
+        "sha256": "5964008f1676a88d578efa61107653c1c77880a0a437974f0e5a3151789decc8"
+      },
+      {
+        "path": "COLLABORATION.md",
+        "bytes": 1567,
+        "sha256": "eec19c9658e243ced6c874ee0267f86677512c9cddac3787dc2d3a630c1339b6"
+      },
+      {
+        "path": "exchange.py",
+        "bytes": 17407,
+        "sha256": "0bd511f066b7d36164fb00318bc071a011a764486cb952fed5c61a55743a879e"
+      },
+      {
+        "path": "RAPP-EXCHANGE-1.md",
+        "bytes": 5822,
+        "sha256": "aff4c596820cc6838bc36b20485a2d102c5adafc7c53ad2e1e09fcaa24c6b020"
+      },
+      {
+        "path": "ROSETTA.md",
+        "bytes": 2181,
+        "sha256": "f3a351ed0528cfea2f06f3309e9dc36f0f3ed45036300128640f177fca657307"
+      },
+      {
+        "path": "SKILL.md",
+        "bytes": 7370,
+        "sha256": "6f7117eb2803ddf36a3de0995da9c1af4119da1e7818f25c770165b84db315bd"
+      }
+    ]
+  },
+  "collaboration": {
+    "root": "agents/experimental/scout",
+    "local_directories": [
+      "candidates",
+      "evidence",
+      "handoffs"
+    ],
+    "private_data_prohibited": true
+  },
+  "runtime": {
+    "listeners": [
+      {
+        "interface": "127.0.0.1",
+        "port": "dynamic",
+        "purpose": "Brainstem workspace API"
+      }
+    ],
+    "generated_secrets": [
+      ".brainstem_secret",
+      "agents/experimental/scout/preview-config.js"
+    ],
+    "outbound_actions": "user-approved-only"
+  },
+  "acceptance": {
+    "controller_status": [
+      "ok",
+      "unauthenticated"
+    ],
+    "preview_file": "index.html",
+    "preview_text": "connected",
+    "chat_endpoint": "POST /chat",
+    "required_chat_fields": [
+      "response",
+      "session_id"
+    ]
+  },
+  "uninstall": {
+    "stop_entrypoint_first": true,
+    "remove_install_root": false,
+    "preserve_brainstem_data": true,
+    "preserve_user_agents": true
+  }
+}

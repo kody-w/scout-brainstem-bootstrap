@@ -1,6 +1,6 @@
 {
   "schema": "scout-brainstem-bootstrap/1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": "https://github.com/kody-w/scout-brainstem-bootstrap",
   "skill": {
     "name": "scout-brainstem-bootstrap",
@@ -24,13 +24,37 @@
       }
     }
   },
+  "workspace": {
+    "schema": "rapp-brainstem-addon/1",
+    "default_name": "Brainstem",
+    "runtime_subdirectory": "rapp_brainstem",
+    "preview": "rapp_brainstem/index.html",
+    "controller": "rapp_brainstem/agents/experimental/scout/brainstem-workspace.ps1",
+    "addon_manifest": "rapp_brainstem/agents/experimental/scout/addon.json",
+    "addon_name": "@rapp/scout-native",
+    "collaboration_root": "rapp_brainstem/agents/experimental/scout",
+    "collaboration_contract": "rapp_brainstem/agents/experimental/scout/SKILL.md",
+    "collaboration_directories": [
+      "candidates",
+      "evidence",
+      "handoffs"
+    ],
+    "source_repository": "https://github.com/microsoft/aibast-agents-library.git",
+    "source_ref": "refs/pull/201/head",
+    "source_commit": "8a430919d269febd6cd67570059842c446fc6252",
+    "generated_private_state": "rapp_brainstem/.brainstem_data/scout",
+    "generated_preview_config": "rapp_brainstem/agents/experimental/scout/preview-config.js"
+  },
   "acceptance": {
     "health_status": "ok",
+    "workspace_status": "ok",
+    "workspace_preview_status": "connected",
     "required_chat_fields": [
       "response",
       "session_id"
     ],
-    "leave_ui_open": true,
+    "leave_ui_open": false,
+    "leave_workspace_preview_open": true,
     "grail_files_immutable": [
       "rapp_brainstem/brainstem.py",
       "rapp_brainstem/index.html"

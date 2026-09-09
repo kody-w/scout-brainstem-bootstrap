@@ -1,7 +1,7 @@
 ---
 name: scout-brainstem-bootstrap
-version: 1.0.0
-description: Use Microsoft Scout to install, repair, authenticate, verify, and visibly open a local RAPP Brainstem without asking the user to run terminal commands.
+version: 1.1.0
+description: Use Microsoft Scout to materialize the byte-pinned Scout-native Brainstem add-on, run Brainstem invisibly, and keep the real static index.html connected in Scout's middle pane without asking the user to run terminal commands.
 homepage: https://github.com/kody-w/scout-brainstem-bootstrap
 metadata: {"category":"ai-agents","runtime":"microsoft-scout","scope":"local-only"}
 ---
@@ -9,7 +9,7 @@ metadata: {"category":"ai-agents","runtime":"microsoft-scout","scope":"local-onl
 # Scout Brainstem Bootstrap
 
 Use this skill when the user asks Scout to set up, install, repair, update, or
-open a local RAPP Brainstem.
+open a local RAPP Brainstem workspace.
 
 The user never runs a terminal command. Scout performs the workflow with its
 own shell, browser, filesystem, and skill-management tools.
@@ -23,9 +23,11 @@ own shell, browser, filesystem, and skill-management tools.
   setup may install Python, Git, and GitHub CLI; write under `~/.brainstem`,
   `~/.local`, and `~/.scout`; and open a GitHub authorization page.
 - Never deploy Azure resources, install RAR or unrelated plugins, publish
-  content, or send messages as part of this workflow.
-- Never modify `rapp_brainstem/brainstem.py`, the Grail `index.html`, or the
-  RAPP/1 protocol. Use the supported installer and launcher around the kernel.
+  content, or send messages during bootstrap.
+- Never synthesize a replacement UI, gateway, or integration. Materialize and
+  verify the byte-pinned working profile declared in `brainstem-addon.json`.
+  After materialization, do not edit `brainstem.py` or `index.html`.
+- Never redefine the RAPP/1 wire. The add-on continues to use `POST /chat`.
 - Preserve existing agents, `soul.md`, `.env`, authentication state, and local
   data through the installer's update/backup path. Never delete an existing
   `~/.brainstem`.
@@ -33,8 +35,9 @@ own shell, browser, filesystem, and skill-management tools.
   `.env` values, or Brainstem secrets.
 - Treat `https://aka.ms/rappinstall` as orientation only. If it resolves to
   Azure deployment documentation, do not follow those cloud instructions.
-- A reachable page is not success. Require `/health` to report `status: "ok"`,
-  then prove one neutral `/chat` request works.
+- A reachable page is not success. Require the workspace controller to report
+  `status: "ok"`, the real static `index.html` to show `connected` in Scout's
+  middle pane, and one neutral `/chat` proof.
 
 ## Pinned bootstrap sources
 
@@ -48,19 +51,31 @@ Use only these immutable installer artifacts:
 The immutable bootstrap installer may update the installed runtime from
 `kody-w/rapp-installer` through its normal versioned upgrade path.
 
-## Phase 1: Inspect without changing anything
+## Phase 1: Install this skill and its public support files
+
+1. Clone `https://github.com/kody-w/scout-brainstem-bootstrap.git` to
+   `~/.scout/bootstrap/scout-brainstem-bootstrap` if absent.
+2. If it already exists, update it only with a clean fast-forward. Never
+   discard local changes.
+3. Prefer Scout's skill-management tool to create or update the global skill
+   named `scout-brainstem-bootstrap` from the repository's root `SKILL.md`.
+4. If the tool is unavailable, run the repository's
+   `scripts/install-global-skill.ps1`.
+5. Verify that the installed global `SKILL.md` is byte-identical to the
+   repository copy.
+
+## Phase 2: Inspect without changing the Brainstem installation
 
 1. Detect the operating system.
 2. Check `http://127.0.0.1:7071/health` with a short timeout.
 3. Classify the result:
-   - `status: "ok"`: preserve the running installation and continue to
-     **Phase 4**.
-   - `status: "unauthenticated"`: do not reinstall; continue to **Phase 3**.
-   - connection refused or invalid response: continue to **Phase 2**.
-   - another application owns port 7071: stop and report the process identity.
-     Never terminate an unverified process.
+   - `status: "ok"` or `status: "unauthenticated"`: preserve the installation.
+   - connection refused or invalid response: continue to **Phase 3**.
+   - another application owns port 7071: identify it and stop the bootstrap.
+     The stable installer uses 7071 for its authentication gate and must never
+     terminate an unrelated listener.
 
-## Phase 2: Install or repair locally
+## Phase 3: Install or repair the supported runtime
 
 Tell the user what will be installed and where before executing.
 
@@ -85,28 +100,101 @@ Tell the user what will be installed and where before executing.
    `~/.brainstem/scout-bootstrap.log`. Do not pipe a network response directly
    into a shell.
 
-### Monitor
+### Monitor the installer
 
-Poll `/health` for up to 20 minutes while also checking the installer process.
-If the installer exits before Brainstem responds, read the redacted tail of the
-bootstrap log and report the failure. Do not retry blindly.
+Poll the installer process and its log. It is acceptable for the installer to
+start a global Brainstem temporarily; the workspace controller will run an
+isolated copy on separate loopback ports. If the installer exits unsuccessfully,
+read the redacted tail of the bootstrap log and report the failure. Do not retry
+blindly.
 
-## Phase 3: Complete GitHub authentication
+## Phase 4: Complete the authentication gate
 
-If `/health` reports `unauthenticated`:
+Before starting the workspace controller, require the installed Brainstem at
+`http://127.0.0.1:7071/health` to report `status: "ok"`.
 
-1. Visibly open `http://127.0.0.1:7071`.
-2. Explain that Brainstem uses the user's GitHub Copilot entitlement and that
-   Scout never needs to see or repeat the token.
-3. Let the user complete Brainstem's GitHub device-code page.
-4. Poll `/health` until it reports `status: "ok"`. Do not claim success while
-   authentication is pending.
+If it reports `unauthenticated`:
 
-## Phase 4: Verify real usage
+1. Explain that Brainstem uses the user's GitHub Copilot entitlement.
+2. Let the installer or Brainstem open the temporary device-code flow.
+3. Never display, read, or repeat the resulting token.
+4. Poll `/health` until it reports `ok`.
 
-1. Record only these public-safe fields from `/health`: `status`, `version`,
-   `model`, and loaded agent names.
-2. Send one neutral request to the existing `POST /chat` endpoint:
+The temporary authentication page is not the final Brainstem experience. After
+authorization, keep the working chat only in Scout's middle workspace pane.
+Do not start the exact workspace controller with a stale or unauthenticated
+global Brainstem token.
+
+## Phase 5: Materialize the Brainstem Scout workspace
+
+Use the current Scout workspace when it is an empty local folder. Otherwise use
+the user's Documents folder and create `Microsoft Scout/Brainstem`.
+
+`@rapp/scout-native` 1.0 currently declares Windows support. On another
+operating system, do not claim the native middle-pane setup is complete.
+
+On Windows, run:
+
+```powershell
+& "$HOME\.scout\bootstrap\scout-brainstem-bootstrap\scripts\setup-workspace.ps1" `
+  -WorkspaceRoot "<chosen-local-workspace-path>"
+```
+
+Require the result to report:
+
+- `schema: rapp-brainstem-addon/1`;
+- `addon: @rapp/scout-native`;
+- the workspace path;
+- `rapp_brainstem/index.html`;
+- the declared `grail_id`;
+- `verified: true`.
+
+This creates a sparse workspace whose visible root stays focused on
+`rapp_brainstem`. It checks out the exact known-good Scout-native source commit,
+verifies the Brainstem, static page, and controller hashes, installs the public
+add-on payload under `agents/experimental/scout`, and excludes local
+collaboration state through the workspace repository's local Git exclude file.
+
+Treat `rapp_brainstem/agents/experimental/scout` as the collaboration root.
+Read its colocated `SKILL.md` and `COLLABORATION.md` before doing shared work.
+Place proposed artifacts in `candidates/`, public-safe validation records in
+`evidence/`, and reviewed host-transfer manifests in `handoffs/`.
+
+## Phase 6: Start the hidden workspace runtime
+
+Run:
+
+```powershell
+& "<workspace>\rapp_brainstem\agents\experimental\scout\brainstem-workspace.ps1" start
+& "<workspace>\rapp_brainstem\agents\experimental\scout\brainstem-workspace.ps1" status
+```
+
+The controller must:
+
+- run the workspace Brainstem invisibly;
+- choose a free localhost port without killing unrelated processes;
+- write ignored `agents/experimental/scout/preview-config.js` with the selected
+  live endpoint and install secret;
+- report `status: "ok"` or the actionable `unauthenticated` state;
+- report `brainstem_dir` as this workspace's `rapp_brainstem` directory.
+
+## Phase 7: Put Brainstem in Scout's middle pane
+
+Open `<workspace>/rapp_brainstem/index.html` in the active Scout workspace
+preview and keep it selected. Do not open a separate browser window.
+
+This is the real static Brainstem page used by the proven local pattern. It
+loads the ignored `preview-config.js` and talks directly to the live endpoint.
+Do not create `SCOUT.html`, an iframe, a copied UI, or a sidecar gateway.
+
+If the preview does not show `connected`, stop and diagnose the endpoint,
+preview config, or authentication gate. Do not replace the working pattern.
+
+## Phase 8: Verify real usage
+
+1. Record only these public-safe fields: `status`, `version`, `model`, and
+   loaded agent names.
+2. Send through the workspace Brainstem's selected live endpoint:
 
    ```json
    {
@@ -116,47 +204,75 @@ If `/health` reports `unauthenticated`:
    ```
 
 3. Require HTTP 200, a non-empty `response`, and a `session_id`.
-4. If chat fails, report the precise error and leave the logs available. A
-   green health check alone is not enough.
+4. Require the middle-pane UI to remain connected after the request.
+5. If chat fails, report the precise error and leave the private workspace logs
+   in place. Never convert a failure into success.
 
-## Phase 5: Persist this skill globally
+## Phase 9: Solve the "now what?" moment
 
-After Git is available:
+After setup succeeds, briefly explain the pairing:
 
-1. Clone `https://github.com/kody-w/scout-brainstem-bootstrap.git` to
-   `~/.scout/bootstrap/scout-brainstem-bootstrap` if absent.
-2. If it already exists, update it only with a clean fast-forward. Never
-   discard local changes.
-3. Prefer Scout's skill-management tool to create or update the local skill
-   named `scout-brainstem-bootstrap` from the repository's root `SKILL.md`.
-4. If that tool is unavailable, run the matching support script:
-   - Windows: `scripts/install-global-skill.ps1`
-   - macOS/Linux: `scripts/install-global-skill.sh`
-5. Verify the installed global `SKILL.md` is byte-identical to the repository
-   copy.
+- **Brainstem** is the user's local workshop: durable context, agents, fast
+  prototypes, and a standard `POST /chat` loop.
+- **Scout** is the outer workshop: files, browser, Microsoft 365, testing,
+  approvals, scheduled automations, and deployment paths.
+- Together they can prototype locally, test with evidence, and promote only the
+  reviewed artifact.
 
-## Phase 6: Leave the experience ready
+Then present these starting paths as discrete choices:
 
-Visibly navigate Scout's browser to `http://127.0.0.1:7071` and leave
-Brainstem open. Do not close it after verification.
+1. **Teach my twin** - interview the user and Brainstem, identify one missing
+   capability, generate a small agent, test it, and hot-load only after checks.
+2. **Build a daily loop** - create a Scout automation that calls Brainstem's
+   existing `/chat` contract through roles such as interviewer, builder,
+   verifier, and curator. Durable learning remains a proposal until approved.
+3. **Make a work briefing** - let Brainstem shape the user's local context while
+   Scout gathers explicitly requested Microsoft 365 information. Keep private
+   details out of outbound messages unless the user approves the exact text.
+4. **Prototype an automation** - define inputs, outputs, side effects, and test
+   cases; implement locally as a Brainstem agent or Scout skill; run a failure
+   test and a success test; retain hashes and evidence under the Scout
+   collaboration root.
+5. **Promote a tested draft** - after the user names **Copilot Studio**,
+   **Microsoft Copilot Cowork**, or **Scout** as the target, package the exact
+   locally tested artifact for that host.
+
+For path 5:
+
+1. Ask which target and environment the user intends.
+2. Re-run local acceptance tests and identify the artifact by revision and
+   SHA-256.
+3. Inspect the target's currently available deployment tools and permissions;
+   never guess that a connector or environment exists.
+4. Create a **draft**, preview, or manual import package first. Do not publish.
+5. Return the target, visibility, recipients, configuration, test evidence,
+   rollback path, and `published: false` to Brainstem and write the reviewed
+   manifest under `agents/experimental/scout/handoffs/`.
+6. Show the user exactly what will become visible and to whom. Wait for
+   explicit user confirmation before publish, send, sharing, or enabling a
+   scheduled action.
 
 Report:
 
 - Brainstem version and model;
 - loaded agent names;
 - whether fresh install, repair, authentication, or no change was needed;
+- workspace and middle-pane preview paths;
 - global skill installation path;
 - the successful chat proof.
 
-Do not offer Azure deployment. End after the local Brainstem is open and ready.
+End with the five starting paths, not a generic "what would you like to do?"
 
 ## Recovery rules
 
-- If a prior Brainstem process is healthy, reuse it.
-- If port 7071 is occupied, identify the listener before taking any action.
+- If a prior global Brainstem process is healthy, preserve it; the isolated
+  workspace may use different ports.
+- If a preferred port is occupied, let the controller select another one.
 - If an installer hash differs, stop immediately and report a supply-chain
   verification failure.
 - If package installation fails, preserve the log and existing installation.
 - If authentication is canceled, leave Brainstem running in the sign-in state
   and report that setup is incomplete.
+- If the workspace contains unrelated files or local Git changes, stop rather
+  than overwriting them.
 - Never convert a failure into a success-shaped fallback.
