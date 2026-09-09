@@ -51,6 +51,26 @@ Use only these immutable installer artifacts:
 The immutable bootstrap installer may update the installed runtime from
 `kody-w/rapp-installer` through its normal versioned upgrade path.
 
+## Phase 0: Check host capabilities and preservation boundaries
+
+Before installing anything:
+
+1. Confirm the host exposes workspace selection and file-preview controls.
+   Shell, filesystem, and browser tools alone do not establish that Scout can
+   open its own middle pane. If those controls are unavailable, explain the
+   limitation and ask whether to proceed with backend-only setup and a manual
+   preview step. Report `preview_pending`, not completion, until the real page
+   is visibly connected. Do not substitute a browser tab or blind window clicks.
+2. Inspect the proposed workspace before materialization. If it contains
+   unrelated files or local changes, preserve it and ask to use a separate
+   folder, such as `Brainstem-Scout`. Do not silently reuse or overwrite it.
+3. Inspect the global installation as well as the workspace. A separate
+   workspace still shares the managed Python environment and authentication
+   under `~/.brainstem`; it is not a fully separate installation. Preserve its
+   version, custom agents, and local changes unless an upgrade is approved.
+   Do not run an update path that resets existing source merely to start a
+   stopped server.
+
 ## Phase 1: Install this skill and its public support files
 
 1. Clone `https://github.com/kody-w/scout-brainstem-bootstrap.git` to
@@ -59,10 +79,13 @@ The immutable bootstrap installer may update the installed runtime from
    discard local changes.
 3. Prefer Scout's skill-management tool to create or update the global skill
    named `scout-brainstem-bootstrap` from the repository's root `SKILL.md`.
-4. If the tool is unavailable, run the repository's
-   `scripts/install-global-skill.ps1`.
+4. If the tool is unavailable or cannot preserve the exact source bytes, run
+   the repository's `scripts/install-global-skill.ps1` on Windows or
+   `scripts/install-global-skill.sh` on macOS/Linux. A tool that generates new
+   frontmatter is not a byte-identical import.
 5. Verify that the installed global `SKILL.md` is byte-identical to the
-   repository copy.
+   repository copy, then load it through Scout's skill-management tools to
+   confirm it is discoverable.
 
 ## Phase 2: Inspect without changing the Brainstem installation
 
@@ -70,7 +93,9 @@ The immutable bootstrap installer may update the installed runtime from
 2. Check `http://127.0.0.1:7071/health` with a short timeout.
 3. Classify the result:
    - `status: "ok"` or `status: "unauthenticated"`: preserve the installation.
-   - connection refused or invalid response: continue to **Phase 3**.
+   - connection refused or invalid response: determine whether an existing
+     installation is merely stopped before continuing to **Phase 3**. A failed
+     health request is not evidence that its source needs upgrading.
    - another application owns port 7071: identify it and stop the bootstrap.
      The stable installer uses 7071 for its authentication gate and must never
      terminate an unrelated listener.
@@ -85,10 +110,40 @@ Tell the user what will be installed and where before executing.
    temporary directory.
 2. Compute SHA-256 with `Get-FileHash`. Refuse to execute unless it exactly
    matches the pinned Windows hash.
-3. Start the saved installer in a detached Windows PowerShell process. Capture
-   its PID and redirect standard output and error to
-   `~/.brainstem/scout-bootstrap.log`. Do not use `irm ... | iex`.
-4. If Windows asks for package-install elevation, tell the user why and wait
+3. Windows PowerShell 5.1 may decode a BOM-less UTF-8 script as ANSI. In the
+   detached child process, explicitly read the verified file as UTF-8 and
+   parse it with its original filename before execution:
+
+   ```powershell
+   $tokens = $null
+   $parseErrors = $null
+   $source = [IO.File]::ReadAllText(
+       $installerPath, (New-Object Text.UTF8Encoding($false, $true))
+   )
+   $ast = [Management.Automation.Language.Parser]::ParseInput(
+       $source, $installerPath, [ref]$tokens, [ref]$parseErrors
+   )
+   if ($parseErrors.Count) { throw "Verified installer failed UTF-8 parsing." }
+   $installerScript = $ast.GetScriptBlock()
+   & $installerScript
+   ```
+
+   `$installerPath` must be the absolute path already verified in step 2.
+   Keep its bytes unchanged; do not add a BOM or rewrite the downloaded file.
+   Retaining the filename preserves the installer's `$PSCommandPath` and its
+   file-based failure exit behavior. Never parse or execute an unverified
+   network response. If the installation plan includes reviewed arguments,
+   such as an approved version pin, pass those arguments to `$installerScript`
+   rather than silently invoking the installer's default update path.
+4. Start that child with `Start-Process`, capture its PID, and use separate
+   `-RedirectStandardOutput` and `-RedirectStandardError` files, such as
+   `~/.brainstem/scout-bootstrap.out.log` and
+   `~/.brainstem/scout-bootstrap.err.log`. Do not merge native stderr into a
+   PowerShell pipeline with `2>&1` or `*>` under
+   `$ErrorActionPreference = "Stop"`: an ordinary native-process warning can
+   become a terminating `NativeCommandError`. Inspect exit codes and health,
+   not the mere presence of stderr. Do not use `irm ... | iex`.
+5. If Windows asks for package-install elevation, tell the user why and wait
    for that visible approval.
 
 ### macOS or Linux
@@ -107,6 +162,20 @@ start a global Brainstem temporarily; the workspace controller will run an
 isolated copy on separate loopback ports. If the installer exits unsuccessfully,
 read the redacted tail of the bootstrap log and report the failure. Do not retry
 blindly.
+
+If dependency installation and authentication succeeded but server startup
+failed, record that installer failure separately. Do not rerun installation
+or update source solely to retry startup. After confirming port ownership,
+start the existing compatible runtime with its supported launcher or a hidden
+`Start-Process` using its managed Python, existing `brainstem.py`, and separate
+stdout/stderr logs. Require the normal health and authentication gates below.
+Never suppress all errors or treat a real nonzero exit as success.
+
+For a safe Windows diagnosis, Scout can run
+`scripts/repro-windows-bootstrap.ps1` from this repository. It uses offline
+fixtures by default; `-DownloadPinnedInstaller` additionally downloads and
+hash-checks the declared installer for parse-only inspection. Neither mode
+executes that installer, signs in, or changes a Brainstem installation.
 
 ## Phase 4: Complete the authentication gate
 
@@ -260,6 +329,12 @@ Report:
 - workspace and middle-pane preview paths;
 - global skill installation path;
 - the successful chat proof.
+
+Also distinguish fresh provisioning from recovery or reuse. Record which of
+Python, Git, GitHub CLI, dependencies, and Copilot authentication already
+existed. A new workspace on an authenticated machine is not a clean-machine
+install test. Keep runtime readiness, chat proof, and middle-pane readiness
+as separate results; `preview_pending` remains an incomplete setup.
 
 End with the five starting paths, not a generic "what would you like to do?"
 
