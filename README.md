@@ -1,5 +1,9 @@
 # Scout Brainstem Bootstrap
 
+<!-- rapp1:network-header:start -->
+[![RAPP/1](https://kody-w.github.io/rapp-hive-public/portfolio/badges/scout-brainstem-bootstrap.svg)](https://github.com/kody-w/rapp-hive-public/blob/main/portfolio/repos/scout-brainstem-bootstrap.md) · **New to RAPP?** [Start here: get your Brainstem →](https://github.com/kody-w/rapp-installer#start-here)
+<!-- rapp1:network-header:end -->
+
 Give Microsoft Scout one skill file; Scout builds a complete local RAPP
 Brainstem workspace and keeps the live chat in Scout's middle pane.
 
