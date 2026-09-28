@@ -22,8 +22,11 @@ Brainstem workspace and keeps the live chat in Scout's middle pane.
 4. Approve an operating-system package prompt or complete GitHub device login
    if Scout explains that either is required.
 
-That is the entire user workflow. The user does not copy or run a terminal
-command.
+With workspace controls available, that is the entire user workflow. Scout
+checks those controls before installation; if they are unavailable, it asks
+before proceeding with backend-only setup and a manual preview step. A running
+server alone is not completed onboarding. The user does not copy or run a
+terminal command.
 
 ## What Scout does
 
@@ -79,6 +82,7 @@ user approves the target and visibility.
 | `scripts/check-brainstem.sh` | Safe macOS/Linux health verifier |
 | `scripts/setup-workspace.ps1` | Materializes and verifies the exact working workspace profile |
 | `scripts/install-addon.ps1` | Generic hash-checked `rapp-brainstem-addon/1` installer |
+| `scripts/repro-windows-bootstrap.ps1` | Safe Windows encoding and native-stderr reproductions |
 | `brainstem-addon.json` | First add-on manifest: `@rapp/scout-native` |
 | `ADDON-SPEC.md` | Reusable public repository shape for future add-ons |
 | `schemas/rapp-brainstem-addon-1.schema.json` | Machine-readable add-on shape |
@@ -90,6 +94,8 @@ user approves the target and visibility.
 - Microsoft Scout is already installed on Windows.
 - The user has a GitHub account with Copilot access.
 - Internet access to GitHub is available during setup.
+- Scout exposes workspace selection and file-preview controls for fully
+  automatic middle-pane setup.
 
 The workspace runtime remains local. Its ignored endpoint configuration connects
 the static middle-pane page directly to the selected localhost Brainstem.
@@ -105,6 +111,54 @@ python -m unittest discover -s tests -v
 ```
 
 The repository also validates PowerShell and shell syntax in GitHub Actions.
+
+### Reproduce Windows PowerShell 5.1 startup failures
+
+The pinned Windows installer exposed two failures during an existing-install
+recovery run:
+
+1. Windows PowerShell 5.1's default ANSI decoding can turn the installer's
+   BOM-less UTF-8 punctuation into syntax errors. On the affected host,
+   default parsing reported nine errors; explicit UTF-8 parsing reported zero.
+2. Under `$ErrorActionPreference = "Stop"`, merging native stderr into a
+   PowerShell stream caused Flask's normal startup warning to terminate the
+   installer with `NativeCommandError`. A hidden native process with separate
+   output files started successfully.
+
+Maintainers can reproduce both mechanisms without running the installer,
+installing Flask, reading credentials, opening a browser, or binding a port:
+
+```powershell
+powershell.exe -NoProfile -File scripts\repro-windows-bootstrap.ps1
+```
+
+Python is needed only for the harmless native-stderr fixture; use
+`-PythonPath "<path-to-python.exe>"` when it is not on PATH. The default
+reproduction is offline and is exercised by the existing Windows unittest job.
+For the real artifact's encoding case, opt into a download:
+
+```powershell
+powershell.exe -NoProfile -File scripts\repro-windows-bootstrap.ps1 -DownloadPinnedInstaller
+```
+
+Alternatively, pass `-InstallerPath "<verified-install.ps1>"`. The script
+checks the file against `bootstrap-manifest.json` before parsing it, never
+executes or modifies it, and removes its own temporary files. Its JSON report
+contains counts, exit status, and booleans rather than raw logs or user paths.
+A hash mismatch aborts the reproduction.
+
+Expected results: explicit UTF-8 parsing has zero errors, the Windows-1252
+fixture has parsing errors, merged native stderr raises `NativeCommandError`,
+and separate native streams retain both logs with exit code zero. The actual
+default-parser error count depends on the host's ANSI code page; UTF-8-enabled
+hosts may not exhibit that part of the failure.
+
+These are safe mechanism reproductions, not proof of fresh provisioning or
+full Scout onboarding. Clean-install coverage still needs missing prerequisites,
+first-time and canceled authorization, occupied ports, preservation of existing
+data, and unavailable workspace controls. The recovery run reused existing
+tools, dependencies, and Copilot authentication; middle-pane completion was
+not established. Installer and add-on pins remain unchanged by this guidance.
 
 ## Security
 

@@ -245,6 +245,30 @@ class BootstrapContractTests(unittest.TestCase):
         self.assertNotIn("curl ", windows)
         self.assertNotIn("curl ", unix)
 
+    def test_preflight_checks_workspace_controls_and_global_state(self):
+        self.assertIn("## Phase 0:", SKILL)
+        self.assertIn("workspace selection and file-preview controls", SKILL)
+        self.assertIn("preview_pending", SKILL)
+        self.assertIn("not a fully separate installation", SKILL)
+        self.assertIn("unless an upgrade is approved", SKILL)
+        self.assertIn("cannot preserve the exact source bytes", SKILL)
+
+    def test_windows_guidance_preserves_encoding_and_native_exit_status(self):
+        self.assertIn("ReadAllText", SKILL)
+        self.assertIn("ParseInput", SKILL)
+        self.assertIn("$PSCommandPath", SKILL)
+        self.assertIn("-RedirectStandardOutput", SKILL)
+        self.assertIn("-RedirectStandardError", SKILL)
+        self.assertIn("NativeCommandError", SKILL)
+        self.assertIn("Never suppress all errors", SKILL)
+
+    def test_reproduction_is_documented_without_claiming_clean_provisioning(self):
+        self.assertIn("repro-windows-bootstrap.ps1", SKILL)
+        self.assertIn("-DownloadPinnedInstaller", README)
+        self.assertIn("never\nexecutes or modifies it", README)
+        self.assertIn("not proof of fresh provisioning", README)
+        self.assertIn("not a clean-machine", SKILL)
+
     def test_health_helpers_use_loopback_only(self):
         for name in ("check-brainstem.ps1", "check-brainstem.sh"):
             text = (ROOT / "scripts" / name).read_text(encoding="utf-8")
